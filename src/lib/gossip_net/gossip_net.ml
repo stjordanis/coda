@@ -192,7 +192,7 @@ module Make (Message : Message_intf) : S with type msg := Message.msg = struct
                    let communication_port =
                      Socket.Address.Inet.port inet_addr
                    in
-                   (* TODO : is it OK to derive discovery port from comms port? *)
+                   (* TODO: OK to derive discovery port from comms port, or query client for it? *)
                    let discovery_port = communication_port + 1 in
                    Peer.create
                      (Socket.Address.Inet.addr inet_addr)
