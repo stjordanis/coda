@@ -3,6 +3,7 @@ open Async
 open Kademlia
 open Coda_base
 open Pipe_lib
+open Network_peer
 
 module type Sync_ledger_intf = sig
   type query [@@deriving bin_io]

@@ -1,6 +1,7 @@
 open Core
 open Async
 open Pipe_lib
+open Network_peer
 open Kademlia
 open O1trace
 module Membership = Membership.Haskell
@@ -36,8 +37,7 @@ module type S = sig
 
   module Config : Config_intf
 
-  val create :
-    Config.t -> Host_and_port.t Rpc.Implementation.t list -> t Deferred.t
+  val create : Config.t -> Peer.t Rpc.Implementation.t list -> t Deferred.t
 
   val received : t -> msg Envelope.Incoming.t Linear_pipe.Reader.t
 
@@ -119,7 +119,7 @@ module Make (Message : Message_intf) : S with type msg := Message.msg = struct
     broadcast_selected t selected_peers msg
 
   let create (config : Config.t)
-      (implementations : Host_and_port.t Rpc.Implementation.t list) =
+      (implementations : Peer.t Rpc.Implementation.t list) =
     let log = Logger.child config.parent_log __MODULE__ in
     trace_task "gossip net" (fun () ->
         let%map membership =
@@ -186,10 +186,17 @@ module Make (Message : Message_intf) : S with type msg := Message.msg = struct
                (`Call
                  (fun _ exn -> Logger.error log "%s" (Exn.to_string_mach exn)))
              (Tcp.Where_to_listen.of_port config.me.Peer.communication_port)
-             (fun peer reader writer ->
+             (fun inet_addr reader writer ->
                Rpc.Connection.server_with_close reader writer ~implementations
                  ~connection_state:(fun _ ->
-                   Socket.Address.Inet.to_host_and_port peer )
+                   let communication_port =
+                     Socket.Address.Inet.port inet_addr
+                   in
+                   (* TODO : is it OK to derive discovery port from comms port? *)
+                   let discovery_port = communication_port + 1 in
+                   Peer.create
+                     (Socket.Address.Inet.addr inet_addr)
+                     ~discovery_port ~communication_port )
                  ~on_handshake_error:
                    (`Call
                      (fun exn ->

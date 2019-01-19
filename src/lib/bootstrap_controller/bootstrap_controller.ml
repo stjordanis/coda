@@ -30,7 +30,7 @@ module type Inputs_intf = sig
 
   module Network :
     Network_intf
-    with type peer := Kademlia.Peer.t
+    with type peer := Network_peer.Peer.t
      and type state_hash := State_hash.t
      and type external_transition := External_transition.t
      and type ancestor_proof_input := State_hash.t * int
@@ -219,7 +219,7 @@ module Make (Inputs : Inputs_intf) :
          *)
         let sender =
           let host_and_port = Envelope.Incoming.sender incoming_transition in
-          Kademlia.Peer.create
+          Network_peer.Peer.create
             (Host_and_port.host host_and_port |> Unix.Inet_addr.of_string)
             ~discovery_port:0 ~communication_port:0
         in

@@ -337,7 +337,7 @@ module type Main_intf = sig
   val best_tip :
     t -> Inputs.Transition_frontier.Breadcrumb.t Participating_state.t
 
-  val peers : t -> Kademlia.Peer.t list
+  val peers : t -> Network_peer.Peer.t list
 
   val strongest_ledgers :
        t
@@ -1296,7 +1296,7 @@ module Run (Config_in : Config_intf) (Program : Main_intf) = struct
     ; conf_dir= Config_in.conf_dir
     ; peers=
         List.map (peers t) ~f:(fun peer ->
-            Kademlia.Peer.to_discovery_host_and_port peer
+            Network_peer.Peer.to_discovery_host_and_port peer
             |> Host_and_port.to_string )
     ; user_commands_sent= !txn_count
     ; run_snark_worker= run_snark_worker t
